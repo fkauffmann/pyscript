@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>PyScript Demo 1</title>
+
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <link rel="stylesheet" href="https://pyscript.net/alpha/pyscript.css" />
+    <script defer src="https://pyscript.net/alpha/pyscript.js"></script>    
+    <py-env>
+        - matplotlib
+    </py-env>
+
+    <script src="https://kit.fontawesome.com/68a7af37d2.js" crossorigin="anonymous"></script>
+</head>
+
+<body>
+    <section class="section">
+        <div class="container">
+            <h1 class="is-size-2 has-text-primary">PyScript Demo</h1>
+            <h2 class="is-size-5">Running Python code in your HTML with WebAssembly</h2>
+            <div class="box my-4">   
+                <div id="mpl"></div>               
+            </div>
+        </div>
+    </section>
+</body>
+
+<py-script output="mpl">
+import matplotlib.pyplot as plt
+import matplotlib.tri as tri
+import numpy as np
+
+# First create the x and y coordinates of the points.
+n_angles = 36
+n_radii = 8
+min_radius = 0.25
+radii = np.linspace(min_radius, 0.95, n_radii)
+
+angles = np.linspace(0, 2 * np.pi, n_angles, endpoint=False)
+angles = np.repeat(angles[..., np.newaxis], n_radii, axis=1)
+angles[:, 1::2] += np.pi / n_angles
+
+x = (radii * np.cos(angles)).flatten()
+y = (radii * np.sin(angles)).flatten()
+z = (np.cos(radii) * np.cos(3 * angles)).flatten()
+
+# Create the Triangulation; no triangles so Delaunay triangulation created.
+triang = tri.Triangulation(x, y)
+
+# Mask off unwanted triangles.
+triang.set_mask(np.hypot(x[triang.triangles].mean(axis=1),y[triang.triangles].mean(axis=1)) < min_radius)
+
+fig1, ax1 = plt.subplots()
+ax1.set_aspect('equal')
+tpc = ax1.tripcolor(triang, z, shading='flat')
+fig1.colorbar(tpc)
+ax1.set_title('tripcolor of Delaunay triangulation, flat shading')
+
+fig1
+</py-script>  
+
+</html>
